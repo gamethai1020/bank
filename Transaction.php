@@ -39,17 +39,22 @@ class Transaction {
     public function transfer($from, $to, $amount) {
  
         try {
+
             $this->pdo->beginTransaction();
  
-            // get available amount of the transferer account
-            // $sql = 'SELECT amount FROM accounts WHERE id=:from';
-            // $stmt = $this->pdo->prepare($sql);
-            // $stmt->execute(array(":from" => $from));
-            // $availableAmount = (int) $stmt->fetchColumn();
-            // $stmt->closeCursor();
- 
-            // ---> to do here ตรวจสอบว่ามีเงินที่จะโอนมีน้อยกว่าในบัญชีหรือไม่
+            //get available amount of the transferer account
+            $sql = 'SELECT amount FROM accounts WHERE id=:from';
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute(array(":from" => $from));
+            $availableAmount = (int) $stmt->fetchColumn();
+            $stmt->closeCursor();
 
+            if($availableAmount<$amount){
+                 throw new PDOException;
+            }
+
+            // ---> to do here ตรวจสอบว่ามีเงินที่จะโอนมีน้อยกว่าในบัญชีหรือไม่
+            
             // deduct from the transferred account
             $sql_update_from = 'UPDATE accounts
                 SET amount = amount - :amount
@@ -71,16 +76,17 @@ class Transaction {
             $stmt->execute(array(":from" => $from));
             $availableAmount = (int) $stmt->fetchColumn();
             $stmt->closeCursor();
- 
+            
             // ---> to do here ***************
- 
-            // commit the transaction
+
+            //commit the transaction
             $this->pdo->commit();
  
             return 'โอนเงินสำเร็จ';
+
         } catch (PDOException $e) {
             $this->pdo->rollBack();
-            return 'จำนวนเงินในระบบไม่เพียงพอ';
+            return 'โอนไม่ได้โว้ยยยยยยยยย';
         }
     }
 
